@@ -60,6 +60,15 @@
    Q->mq_attr.mq_maxmsg - Q->mBox.mIdxOut + Q->mBox.mIdxIn \
 )
 
+#define O_ISRDONLY( M ) \
+	((M & O_RDONLY) == O_RDONLY)
+
+#define O_ISWRONLY( M ) \
+	((M & O_WRONLY) == O_WRONLY)
+
+#define O_ISRDWR( M ) \
+	((M & O_RDWR) == O_RDWR)
+
 typedef struct{
    time_t               time;
    unsigned int         prio;
@@ -294,8 +303,8 @@ mqd_t mq_open(
       }
    }
 
-   /* Attach queue handle to file handle */
-   if (oflags & (O_RDONLY | O_WRONLY | O_RDWR) ) { /* Want to use queue */
+   /* Attach queue handle to file handle if flags indicate also usage */
+   if ( O_ISRDONLY(oflags) || O_ISWRONLY(oflags) || O_ISRDWR(oflags) ) {
       if (!(oflags & O_CREAT)) { /* Hasn't been created this time. Find it! */
          for (i=0; i<NUMBER_OF_QUEUES; i++) {
             if (queuePool[i].taken)
@@ -329,7 +338,7 @@ mqd_t mq_open(
       filePool[i].oflags = oflags;
       filePool[i].tId = pthread_self();
 
-   }else{
+   } else {
       dId =  CREATE_ONLY;  /* Not valid file handle, Created only */
    }
 
@@ -365,7 +374,9 @@ size_t mq_receive(
       return(-1);
    }
 
-   if (!( filePool[mq].oflags & (O_RDONLY | O_RDWR))){
+   if (!( O_ISRDONLY(filePool[mq].oflags) || 
+		  O_ISRDWR(filePool[mq].oflags))) 
+   {
       assert_ext(sem_post(&poolAccessSem) == 0);
       errno =  EBADF;
       return(-1);
@@ -466,7 +477,9 @@ int mq_send(
       return(-1);
    }
 
-   if (!( filePool[mq].oflags & (O_WRONLY | O_RDWR))){
+   if (!( O_ISWRONLY(filePool[mq].oflags) || 
+		  O_ISRDWR(filePool[mq].oflags))) 
+   {
       assert_ext(sem_post(&poolAccessSem) == 0);
       errno =  EBADF;
       return(-1);
@@ -495,7 +508,7 @@ int mq_send(
          assert_ext(sem_post(&poolAccessSem) == 0);
          errno =  EAGAIN;
          return(-1);
-      }else{
+      } else {
          assert_ext(sem_post(&poolAccessSem) == 0);
          errno =  EAGAIN; /* TODO: block on send full */
          return(-1);

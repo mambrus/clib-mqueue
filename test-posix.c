@@ -87,7 +87,7 @@ void *thread2(void *inpar ){
          loop_cntr = 0;
 
          msg_buf[0] = loop_cntr2;
-         printf("%s ending....\n", __FUNCTION__);
+         printf("%s sending....\n", __FUNCTION__);
          rc = mq_send(q, msg_buf, MYMSGSIZE, 5);
          if (rc==(mqd_t)-1){
             int myerrno = errno;
@@ -110,6 +110,7 @@ void *thread3(void *inpar){
    mqd_t       q;
    int         rc;
 
+   //sleep(3);
    q = mq_open( QNAME, O_RDONLY, 0 ,NULL);
    if (q==(mqd_t)-1){
       int myerrno = errno;
@@ -152,9 +153,8 @@ int main(char argc, char **argv)
 
    printf("Unlinking old queue name (if used). \n");
    mq_unlink(QNAME);  //Don't assert_ext - "failure" is normal here
-   sleep(1);
 
-   qattr.mq_maxmsg = 3;
+   qattr.mq_maxmsg = 30;
    qattr.mq_msgsize = MYMSGSIZE;
    q2 = mq_open( QNAME,O_CREAT|O_RDWR,0666,&qattr);
 
@@ -167,7 +167,6 @@ int main(char argc, char **argv)
       perror(strerror(myerrno));
       assert_ext("Queue opening for creation failure" == NULL);
    }
-   sleep(3);
 
    printf("Queues created\n");
    printf("Creating thread2\n");
