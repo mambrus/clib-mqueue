@@ -69,8 +69,12 @@
 #define O_ISRDWR( M ) \
 	((M & O_RDWR) == O_RDWR)
 
+#define TNOW() (clock())
+
+typedef clock_t         hr_time;
+
 typedef struct{
-   time_t               time;
+   hr_time              timeStamp;
    unsigned int         prio;
    unsigned int         inOrder;
 }OrderT;
@@ -290,7 +294,7 @@ mqd_t mq_open(
             queuePool[qId].mBox.messArray[k].msgSz = 0;
             queuePool[qId].mBox.messArray[k].order.inOrder = 0;
             queuePool[qId].mBox.messArray[k].order.prio    = 0; /*Tada...!*/
-            queuePool[qId].mBox.messArray[k].order.time    = 0;
+            queuePool[qId].mBox.messArray[k].order.timeStamp = 0;
             queuePool[qId].mBox.lastInOrder = 0;
          }
 
@@ -524,7 +528,7 @@ int mq_send(
    Q->mBox.messArray[Q->mBox.mIdxIn].order.prio = msgprio;
    Q->mBox.messArray[Q->mBox.mIdxIn].order.inOrder =
       Q->mBox.lastInOrder++;
-   Q->mBox.messArray[Q->mBox.mIdxIn].order.time = time(&ttime);
+   Q->mBox.messArray[Q->mBox.mIdxIn].order.timeStamp = TNOW();
 
    Q->mBox.mIdxIn++;
    Q->mBox.mIdxIn %= Q->mq_attr.mq_maxmsg;
@@ -597,9 +601,9 @@ static int compMess(
    if (e1->order.prio < e2->order.prio)
       return(1);
    /* Per timestamp (resolution is 1 sek) */
-   if (e1->order.time < e2->order.time)
+   if (e1->order.timeStamp < e2->order.timeStamp)
       return(-1);
-   if (e1->order.time > e2->order.time)
+   if (e1->order.timeStamp > e2->order.timeStamp)
       return(1);
    /* Per order of sending */
    if (e1->order.inOrder < e2->order.inOrder)
