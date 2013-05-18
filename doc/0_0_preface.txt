@@ -1,0 +1,6 @@
+libmqueue
+=========
+
+POSIX 1003.1b rt-mqueue for systems that don't have it but implement
+1003.1b semaphores.
+

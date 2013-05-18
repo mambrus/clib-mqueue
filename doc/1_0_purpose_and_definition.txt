@@ -1,0 +1,16 @@
+Purpose & definition
+====================
+
+Note that all files at this level should be considered as test for the real
+project, which is in the subdirectory libmqueue. I.e. when deployed, either
+link files from there, link the directory, or build the directory and
+install as library.
+
+This project implement POSIX 1003.1B rt-queues for systems that don't have
+it's ultra light as it was originally intended for deeply embedded systems.
+It uses no other API's than whats available in all libc's (even the
+minimalistic ones) and semaphores. I.e. it can be used almost anywhere as
+either a drop-in replacement or as en extension.
+
+Note that files at this level should be considered as test for the real
+

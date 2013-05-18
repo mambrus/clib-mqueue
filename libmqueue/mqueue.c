@@ -17,22 +17,6 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
-/*!
-@file
-@ingroup POSIX_RT
-
-@brief RT queues - POSIX 1003.1b API
-
-Work-effort for this code was originally donated courtesy the ZOI project (year
-2000, SIEMENS Elema AB, SWEDEN). It was written as a wrapper for pThreads-win32,
-to give Windows threads the POSIX RT queues. It's however completely based on
-standard API:s and as such portable to most systems that implement those API:s.
-I.e. functions that all libc's implement, even deeply embedded ones. The only
-requirement is that the system has support for semaphores.
-
-*/
-
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>

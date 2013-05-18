@@ -1,21 +1,48 @@
-PHONIES=install build all clean uninstall
+PHONIES=build all clean install uninstall
 
 ifneq (${MAKELEVEL},0)
 
-LOCAL_MODULE := libmqueue
-LOCAL_SRC_FILES := \
-   mqueue.c \
+LOCAL_PATH := .
+include common.mk
 
+LOCAL_MODULE := hemul
+LOCAL_SRC_FILES_X := \
+   doc.c \
+   init.c \
+   assert_np.c \
+   runengine.c \
+   userio.c \
+   main.c
+
+LOCAL_SRC_FILES := \
+   test-posix.c
+
+LOCAL_LIBS_X := \
+   mtime \
+   mqueue
 
 LOCAL_LIBS := \
-   rt \
-   pthread
+   mqueue rt
 
 LOCAL_CFLAGS := -fPIC
-#LOCAL_CFLAGS += -DNDEBUG
+LOCAL_CFLAGS += -DNDEBUG
+LOCAL_CFLAGS += -DVERBOSE_TYPE=3
 LOCAL_C_INCLUDES += ${HOME}/include
 LOCAL_LDLIBS += ${HOME}/lib
-LOCAL_SUBMODULES :=
+
+LOCAL_SUBMODULES_X := \
+   libmtime \
+   libmqueue
+
+LOCAL_SUBMODULES := \
+   libmqueue
+
+NDK_BUILD := ndk-build
+NDK_VARIABLES := \
+   APP_PLATFORM:=android-14 \
+   NDK_PROJECT_PATH=$(CURDIR) \
+   NDK_MODULE_PATH=$(CURDIR) \
+   APP_BUILD_SCRIPT=Android.mk
 
 .PHONY: ${PHONIES} ${LOCAL_SUBMODULES}
 
@@ -33,70 +60,50 @@ LOCAL_LIBS:= ${LOCAL_LDLIBS} $(addprefix -l, ${LOCAL_LIBS})
 LOCAL_AR_LIBS:= $(addprefix ${LOCAL_LDLIBS}/lib, ${LOCAL_AR_LIBS})
 LOCAL_AR_LIBS:= $(addsuffix .a, ${LOCAL_AR_LIBS})
 CFLAGS += -O0 -g3 ${LOCAL_CFLAGS}
-CFLAGS += -I ./include -I ../ ${LOCAL_C_INCLUDES}
+CFLAGS += -I ./include ${LOCAL_C_INCLUDES}
 CLEAN_MODS := $(patsubst %, $(MAKE) clean -C %;,$(LOCAL_SUBMODULES))
 UNINST_MODS := $(patsubst %, $(MAKE) uninstall -C %;,$(LOCAL_SUBMODULES))
-RINFO := echo
+FOUND_CDEPS:= $(shell find . -name "*.d")
+RM := rm
 .INTERMEDIATE: ${LOCAL_SRC_FILES:.c=.d}
+#.SECONDARY: ${LOCAL_SRC_FILES:.c=.tmp}
+#.INTERMEDIATE: ${LOCAL_SRC_FILES:.c=.tmp}
 
-ifdef LIB_DYNAMIC
-    $(info Build will build and use it's libraries: dynamic )
-    $(info To build/use static libs: unset LIB_DYNAMIC )
-    LOCAL_MODULE := $(addsuffix .so, ${LOCAL_MODULE})
-    MODULE_FLAGS := -shared
-    EXLIBS=$(shell ls lib/*.so)
-else
-    $(info Build will build and use it's libraries: static )
-    $(info To build all dynamic: export LIB_DYNAMIC='y' )
-    LOCAL_MODULE := $(addsuffix .a, ${LOCAL_MODULE})
-    MODULE_FLAGS := -static
-    EXLIBS=$(shell ls lib/*.a)
-endif
-
-LOCAL_MODULE := lib/${LOCAL_MODULE}
-build: tags $(LOCAL_MODULE)
+build: ${LOCAL_SUBMODULES} tags README.md $(LOCAL_MODULE)
 all: install
 
 ${LOCAL_SUBMODULES}:
+	echo "Diving into submodule: $@"
 	$(MAKE) -e -k -C $@ install
 
-clean:
+clean: common-clean
 	$(CLEAN_MODS)
-	rm -f *.o
-	rm -f *.tmp
-	rm -f *.d
-	rm -f $(LOCAL_MODULE)
-	rm -f tags
+	$(RM) -f *.o
+	$(RM) -f *.d
+	$(RM) -f *.tmp
+	$(RM) -f $(LOCAL_MODULE)
+	$(RM) -f tags
 
-install: ${INSTALLDIR}/${LOCAL_MODULE} ${INSTALLDIR}/${EXHEADERS}
+install: ${INSTALLDIR}/bin/${LOCAL_MODULE}
 
 uninstall:
 	$(UNINST_MODS)
-	rm -rf ${INSTALLDIR}/${LOCAL_MODULE}
-	bash -c '${INSTALLDIR}; rm ${EXHEADERS}'
+	$(RM) -rf ${INSTALLDIR}/bin/${LOCAL_MODULE}
 
-${INSTALLDIR}/${LOCAL_MODULE}: ${EXLIBS} ${LOCAL_MODULE}
-	mkdir -p ${INSTALLDIR}/lib
-	rm -f ${INSTALLDIR}/${LOCAL_MODULE}
-	cp $(LOCAL_MODULE) ${INSTALLDIR}/${LOCAL_MODULE}
-
-${INSTALLDIR}/${EXHEADERS}: ${EXHEADERS}
-	mkdir -p $(shell dirname ${@})
-	rm -f ${@}
-	cp include/$(shell basename ${@}) ${@}
+${INSTALLDIR}/bin/${LOCAL_MODULE}: $(LOCAL_MODULE)
+	mkdir -p ${INSTALLDIR}/bin
+	$(RM) -f ${INSTALLDIR}/bin/${LOCAL_MODULE}
+	cp $(LOCAL_MODULE) ${INSTALLDIR}/bin/${LOCAL_MODULE}
 
 tags: $(shell ls *.[ch])
 	ctags --options=.cpatterns --exclude=@.cexclude -o tags -R *
 
-
 $(LOCAL_MODULE): Makefile $(LOCAL_SRC_FILES:c=o)
-	rm -f $(LOCAL_MODULE)
-ifdef LIB_DYNAMIC
+	$(RM) -f $(LOCAL_MODULE)
 	gcc $(CFLAGS) $(MODULE_FLAGS) $(LOCAL_SRC_FILES:c=o) ${LOCAL_LIBS} -o ${@}
-else
-	ar rcs ${@} ${LOCAL_AR_LIBS} $(LOCAL_SRC_FILES:c=o)
-endif
+	@echo "Remember for dev runs: export LD_LIBRARY_PATH=${INSTALLDIR}/lib"
 	@echo ">>>> Build $(LOCAL_MODULE) success! <<<<"
+
 
 #Cancel out built-in implicit rule
 %.o: %.c
@@ -105,11 +112,44 @@ endif
 	gcc -MM $(CFLAGS) ${@:tmp=c} > ${@}
 
 %.d: %.tmp
-	cat ${@:d=tmp} | sed  -E 's/$*.c/$*.c $@/' > ${@}
+	cat ${@:d=tmp} | sed  -E 's,$*.c,$*.c $@,' > ${@}
 
 %.o: %.d Makefile
 	gcc -c $(CFLAGS) ${@:o=c} -o $@
 
+README_SCRIPT := \
+    FS=$$(ls doc/* | sort); \
+    for F in $$FS; do cat $$F | awk -vRFILE=$$F '\
+        BEGIN { \
+            CHAPT=gensub("[_.[:alpha:]]*$$","","g",RFILE); \
+            CHAPT=gensub("^.*/","","g",CHAPT); \
+            CHAPT=gensub("_",".","g",CHAPT); \
+        } \
+        NR==1{ \
+		    S=sprintf("Chapter %s: %s",CHAPT,toupper($$0)); \
+            printf("%s\n",S); \
+            for (i=0; i< length(S); i++) \
+                printf("="); \
+            printf("\n"); \
+            printf("\n"); \
+        } \
+        NR > 3{ \
+            print $$0 \
+        }'; \
+    done
+
+DOCFILES := $(shell ls doc/*)
+
+README.md: ${DOCFILES}
+	@$(RM) -f ${@}
+	@echo "Generaring file: README.md"
+	@${README_SCRIPT} > ${@}
+
+android:
+	$(NDK_BUILD) $(NDK_VARIABLES)
+
+android-clean: common-clean
+	$(NDK_BUILD) $(NDK_VARIABLES) clean
 
 include $(FOUND_CDEPS)
 
@@ -135,7 +175,7 @@ else
     endif
 endif
 
-${PHONIES} $(patsubst %.c,%.o,$(wildcard *.c)) tags:
+${PHONIES} $(patsubst %.c,%.o,$(wildcard *.c)) tags README.md android android-clean:
 ifeq ($(HAS_GRCAT), yes)
 	( $(MAKE) $(MFLAGS) -e -C . $@ 2>&1 ) | grcat conf.gcc
 else
@@ -143,3 +183,4 @@ else
 endif
 
 endif
+

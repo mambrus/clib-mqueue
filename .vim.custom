@@ -1,6 +1,4 @@
 
-:set textwidth=80
-
 let $LIB_DYNAMIC = "y"
 let $LD_LIBRARY_PATH = expand('$HOME/lib')
 
