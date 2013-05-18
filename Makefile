@@ -8,7 +8,8 @@ LOCAL_SRC_FILES := \
 
 
 LOCAL_LIBS := \
-   rt
+   rt \
+   pthread
 
 LOCAL_CFLAGS := -fPIC
 #LOCAL_CFLAGS += -DNDEBUG

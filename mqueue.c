@@ -424,7 +424,7 @@ size_t mq_receive(
    ); if (msgprio)  /* Special case if attribute is NULL. Check what standard
 					   says about that */
 
-	   *msgprio = Q->mBox.messArray[Q->mBox.mIdxIn].order.prio;
+   *msgprio = Q->mBox.messArray[Q->mBox.mIdxIn].order.prio;
 
    msgSize = Q->mBox.messArray[Q->mBox.mIdxOut].msgSz;
 
