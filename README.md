@@ -12,13 +12,16 @@ project, which is in the subdirectory libmqueue. I.e. when deployed, either
 link files from there, link the directory, or build the directory and
 install as library.
 
-This project implement POSIX 1003.1B rt-queues for systems that don't have
-it's ultra light as it was originally intended for deeply embedded systems.
-It uses no other API's than whats available in all libc's (even the
-minimalistic ones) and semaphores. I.e. it can be used almost anywhere as
-either a drop-in replacement or as en extension.
+This project implements POSIX 1003.1B rt-queues for systems that don't
+already have it. Implementation is ultra light as it was originally
+intended for deeply embedded systems. Alternative use is therefore
+substitution a already existing implementation for memory foot-print or
+speed reasons.
 
-Note that files at this level should be considered as test for the real
+It uses no other API's than what's available in all libc's (even the
+most minimalistic ones) and semaphores. I.e. it can be used almost
+anywhere as either a drop-in replacement or as en extension.
+
 
 Chapter 1.0: PURPOSE & DEFINITION
 =================================
@@ -28,17 +31,19 @@ project, which is in the subdirectory libmqueue. I.e. when deployed, either
 link files from there, link the directory, or build the directory and
 install as library.
 
-This project implement POSIX 1003.1B rt-queues for systems that don't have
-it's ultra light as it was originally intended for deeply embedded systems.
-It uses no other API's than whats available in all libc's (even the
-minimalistic ones) and semaphores. I.e. it can be used almost anywhere as
-either a drop-in replacement or as en extension.
+This project implements POSIX 1003.1B rt-queues for systems that don't
+already have it. Implementation is ultra light as it was originally
+intended for deeply embedded systems. Alternative use is therefore
+substitution a already existing implementation for memory foot-print or
+speed reasons.
 
-Note that files at this level should be considered as test for the real
+It uses no other API's than what's available in all libc's (even the
+most minimalistic ones) and semaphores. I.e. it can be used almost
+anywhere as either a drop-in replacement or as en extension.
 
-Chapter 1.1: /*
-===============
 
+Chapter 1.1: HISTORY
+====================
 
 Early age
 ---------
