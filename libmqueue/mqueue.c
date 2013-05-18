@@ -226,7 +226,7 @@ mqd_t mq_open(
          if (queuePool[i].taken){
             if (strncmp( queuePool[i].mq_name, mq_name, PATH_MAX) == 0){
                /* Duplicate name exists */
-               if (oflags & O_CREAT) {
+               if (oflags & O_EXCL) {
                   /*Exclusive ?*/
                   assert_ext(sem_post(&poolAccessSem) == 0);
                   errno =  EEXIST;
