@@ -5,34 +5,20 @@ ifneq (${MAKELEVEL},0)
 LOCAL_PATH := .
 include common.mk
 
-LOCAL_MODULE := hemul
-LOCAL_SRC_FILES_X := \
-   doc.c \
-   init.c \
-   assert_np.c \
-   runengine.c \
-   userio.c \
-   main.c
+LOCAL_MODULE := mqueuetest
 
 LOCAL_SRC_FILES := \
+   assert_np.c \
    test-posix.c
 
-LOCAL_LIBS_X := \
-   mtime \
-   mqueue
-
 LOCAL_LIBS := \
-   mqueue rt
+   mqueue
 
 LOCAL_CFLAGS := -fPIC
 LOCAL_CFLAGS += -DNDEBUG
 LOCAL_CFLAGS += -DVERBOSE_TYPE=3
 LOCAL_C_INCLUDES += ${HOME}/include
 LOCAL_LDLIBS += ${HOME}/lib
-
-LOCAL_SUBMODULES_X := \
-   libmtime \
-   libmqueue
 
 LOCAL_SUBMODULES := \
    libmqueue

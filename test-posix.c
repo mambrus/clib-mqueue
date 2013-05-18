@@ -27,15 +27,15 @@ http://mia.ece.uic.edu/~papers/WWW/books/posix4/DOCU_011.HTM
 http://physics.usask.ca/~angie/ep414/labmanual/pdf/posix_users.pdf
 */
 
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>  
-#include <pthread.h> 
+#include "assert_np.h"
+#include <pthread.h>
 #include <mqueue.h>
 #include <errno.h>
-#include <string.h>  
-#include <time.h>  
-#include <fcntl.h>  
+#include <string.h>
+#include <time.h>
+#include <fcntl.h>
 
 #ifndef TRUE
 #define TRUE 1
@@ -47,7 +47,7 @@ http://physics.usask.ca/~angie/ep414/labmanual/pdf/posix_users.pdf
 
 
 #if !defined(TINKER) && defined(_WIN32) &&  defined(_MSC_VER)
-//If this example is compiled under pThread-W32 *Widout TinKer* - 
+//If this example is compiled under pThread-W32 *Widout TinKer* -
 //i.e. it needs some "help"
 #  include <windows.h>
 #  define sleep(x) (Sleep(x * 1000))
@@ -58,152 +58,152 @@ http://physics.usask.ca/~angie/ep414/labmanual/pdf/posix_users.pdf
 
 
 #define MYMSGSIZE 4
-#define QNAME "/zingo_forever" 
+#define QNAME "/myQ"
 
-void *thread2(void *inpar ){ 
-   int         loop_cntr            = 0; 
-   int         loop_cntr2           = 0; 
-   mqd_t       q; 
-   int         rc; 
-   char        msg_buf[16]; 
-   
-   q = mq_open( QNAME, /*O_NONBLOCK | */O_WRONLY, 0 ,NULL); 
-   if (q==(mqd_t)-1){ 
+void *thread2(void *inpar ){
+   int         loop_cntr            = 0;
+   int         loop_cntr2           = 0;
+   mqd_t       q;
+   int         rc;
+   char        msg_buf[16];
+
+   q = mq_open( QNAME, /*O_NONBLOCK | */O_WRONLY, 0 ,NULL);
+   if (q==(mqd_t)-1){
       int myerrno = errno;
-      
+
       printf("1.Errno = %d\n",myerrno);
       if (myerrno == EACCES)
          printf("EACCES\n");
-         
-      perror(strerror(myerrno)); 
-      assert("Queue opening for writing faliure" == NULL);      
-   } 
-   
-   while (TRUE) {               
-      usleep(100000); 
-      loop_cntr++; 
-      if (loop_cntr>=2){ 
-         loop_cntr2++; 
-         loop_cntr = 0; 
-         
+
+      perror(strerror(myerrno));
+      assert_ext("Queue opening for writing failure" == NULL);
+   }
+
+   while (TRUE) {
+      usleep(100000);
+      loop_cntr++;
+      if (loop_cntr>=2){
+         loop_cntr2++;
+         loop_cntr = 0;
+
          msg_buf[0] = loop_cntr2;
-         printf("sending....\n"); 
-         rc = mq_send(q, msg_buf, MYMSGSIZE, 5); 
+         printf("%s ending....\n", __FUNCTION__);
+         rc = mq_send(q, msg_buf, MYMSGSIZE, 5);
          if (rc==(mqd_t)-1){
             int myerrno = errno;
-      
+
             printf("2.Errno = %d\n",myerrno);
             if (myerrno == EACCES)
                printf("EACCES\n");
-         
-            perror(strerror(myerrno));     
-            assert("Queue writing faliure" == NULL); 
-         } 
-         printf("sent!\n"); 
-      } 
-   } 
-   return (void*)1; 
-} 
 
-void *thread3(void *inpar){ 
-   char        msg_buf[16]; 
-   mqd_t       q; 
-   int         rc; 
-   
-   q = mq_open( QNAME, O_RDONLY, 0 ,NULL); 
-   if (q==(mqd_t)-1){ 
+            perror(strerror(myerrno));
+            assert_ext("Queue writing failure" == NULL);
+         }
+         printf("sent!\n");
+      }
+   }
+   return (void*)1;
+}
+
+void *thread3(void *inpar){
+   char        msg_buf[16];
+   mqd_t       q;
+   int         rc;
+
+   q = mq_open( QNAME, O_RDONLY, 0 ,NULL);
+   if (q==(mqd_t)-1){
       int myerrno = errno;
-      
+
       printf("3.Errno = %d\n",myerrno);
       if (myerrno == EACCES)
          printf("EACCES\n");
-      perror(strerror(myerrno)); 
-      
-      assert("Queue opening for reading faliure" == NULL); 
-   } 
-   
+      perror(strerror(myerrno));
+
+      assert_ext("Queue opening for reading failure" == NULL);
+   }
+
    while (TRUE) {
-      printf("receiving....\n");                
-      rc = mq_receive(q, msg_buf, MYMSGSIZE, NULL);       
+      printf("%s receiving....\n",__FUNCTION__);
+      rc = mq_receive(q, msg_buf, MYMSGSIZE, NULL);
       if (rc==(mqd_t)-1){
          int myerrno = errno;
-          
+
          printf("4.Errno = %d\n",myerrno);
          if (myerrno == EACCES)
             printf("EACCES\n");
-            
-         perror(strerror(myerrno)); 
 
-         assert("Queue reading faliure\n" == NULL); 
-      } 
-      printf("Received: %d of length %d\n",msg_buf[0],rc); 
-   } 
-   return (void*)1; 
-} 
+         perror(strerror(myerrno));
+
+         assert_ext("Queue reading failure\n" == NULL);
+      }
+      printf("Received: %d of length %d\n",msg_buf[0],rc);
+   }
+   return (void*)1;
+}
 
 int main(char argc, char **argv)
-{ 
-   pthread_t T2_Thid,T3_Thid; 
+{
+   pthread_t T2_Thid,T3_Thid;
    mqd_t q2;
-   int loop =0;   
-   struct mq_attr qattr;       
+   int loop =0;
+   struct mq_attr qattr;
 
-   printf("\n\n\n\n\n\n\nHello world or TinKer targets\n"); 
+   printf("Root-thread starting..\n");
 
-   printf("Unlinking old queue name (if used). \n");  
-   mq_unlink(QNAME);  //Don't assert - "failiure" is normal here
+   printf("Unlinking old queue name (if used). \n");
+   mq_unlink(QNAME);  //Don't assert_ext - "failure" is normal here
    sleep(1);
-   
+
    qattr.mq_maxmsg = 3;
    qattr.mq_msgsize = MYMSGSIZE;
-   q2 = mq_open( QNAME,O_CREAT|O_RDWR,0666,&qattr);  
+   q2 = mq_open( QNAME,O_CREAT|O_RDWR,0666,&qattr);
 
-   if (q2==(mqd_t)-1){      
+   if (q2==(mqd_t)-1){
       int myerrno = errno;
-      
+
       printf("Errno = %d\n",myerrno);
       if (myerrno == EACCES)
          printf("EACCES\n");
-      perror(strerror(myerrno)); 
-      assert("Queue opening for creation faliure" == NULL); 
+      perror(strerror(myerrno));
+      assert_ext("Queue opening for creation failure" == NULL);
    }
    sleep(3);
-   
-   printf("Queues created\n"); 
-   printf("Creating thread2\n"); 
-   assert (pthread_create(&T2_Thid, NULL, thread2, 0) == 0); 
-   printf("thread2 started\n"); 
-   
-   printf("Creating thread3\n"); 
-   assert (pthread_create(&T3_Thid, NULL, thread3, 0) == 0); 
-   printf("thread3 started\n"); 
 
-   printf("Root started\n"); 
+   printf("Queues created\n");
+   printf("Creating thread2\n");
+   assert_ext (pthread_create(&T2_Thid, NULL, thread2, 0) == 0);
+   printf("thread2 started\n");
+
+   printf("Creating thread3\n");
+   assert_ext (pthread_create(&T3_Thid, NULL, thread3, 0) == 0);
+   printf("thread3 started\n");
+
+   printf("Root started\n");
    for (loop=0;loop<10;loop++) {
-      printf("Root 2s bling!!!!!!!!!!!!!!!!!\n");      
-      sleep(2); 
-   } 
+      printf("Root 2s bling!!!!!!!!!!!!!!!!!\n");
+      sleep(2);
+   }
 
    printf("Test finished\n");
-   
-   printf("Closing queue handle. Both threads should still work <------------\n");  
-   assert (mq_close(q2) == 0);
+
+   printf("Closing queue handle. Both threads should still work <------------\n");
+   assert_ext (mq_close(q2) == 0);
    sleep(10);
-       
-   printf("Unlinking queue name. Threads should block now <------------------\n");    
-   assert(mq_unlink(QNAME) == 0);
+
+   printf("Unlinking queue name. Threads should block now <------------------\n");
+   assert_ext(mq_unlink(QNAME) == 0);
    sleep(5);
-   printf("Hmm, does Linux really following standard? <----------------------\n");  
+   printf("Hmm, does Linux really following standard? <----------------------\n");
    sleep(5);
-   
-   
-   printf("Killing thread 3\n");  
-   assert (pthread_cancel(T3_Thid) == 0);
-   
-   printf("Killing thread 2\n");  
-   assert (pthread_cancel(T2_Thid) == 0);
+
+
+   printf("Killing thread 3\n");
+   assert_ext (pthread_cancel(T3_Thid) == 0);
+
+   printf("Killing thread 2\n");
+   assert_ext (pthread_cancel(T2_Thid) == 0);
    return 0;
-} 
+}
 
 /*!
  * @defgroup CVSLOG_test_posix_c test_posix_c
@@ -275,7 +275,7 @@ int main(char argc, char **argv)
  *  Revision 1.2  2006/02/22 13:05:45  ambrmi09
  *  Major doxygen structure modification. No chancge in actual sourcecode.
  *
- *  
+ *
  */
 
 

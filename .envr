@@ -1,0 +1,10 @@
+#Environment for UID=root
+
+#Source this to run/debug/buid for host as root with shared libraries
+#Source from main project directory.
+export SAMPLER_ENV_SET='y'
+export LIB_DYNAMIC='y'
+export LD_LIBRARY_PATH=$(pwd)/libmlist/lib:$(pwd)/libsampler/lib
+unset  KDBG_SESSION
+export KDBG_BINARY="$(pwd)/mqueuetest"
+export GDB="gdb"

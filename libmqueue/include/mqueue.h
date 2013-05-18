@@ -46,7 +46,7 @@ if !defined (HAS_DIRCWRAP_H)
 
 # define FNAME( path, file ) \
    DEFSTR( path/file )
-   
+
 # define BUILDCHAIN( file ) \
    FNAME( CHAINPATH, file )
 

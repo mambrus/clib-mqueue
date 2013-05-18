@@ -41,7 +41,7 @@
 
 #define FNAME( path, file ) \
    DEFSTR( path/file )
-   
+
 #define BUILDCHAIN( file ) \
    FNAME( CHAINPATH, file ) \
 
