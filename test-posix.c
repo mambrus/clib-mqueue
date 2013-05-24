@@ -60,12 +60,18 @@ http://physics.usask.ca/~angie/ep414/labmanual/pdf/posix_users.pdf
 #define MYMSGSIZE 4
 #define QNAME "/myQ"
 
+#define VALUE   0
+#define COMMAND 1
+#define COMMAND_NOP  0
+#define COMMAND_EXIT 1
+
 void *thread2(void *inpar ){
    int         loop_cntr            = 0;
    int         loop_cntr2           = 0;
    mqd_t       q;
    int         rc;
    char        msg_buf[16];
+   int*        p_running = (int*)inpar;
 
    q = mq_open( QNAME, /*O_NONBLOCK | */O_WRONLY, 0 ,NULL);
    if (q==(mqd_t)-1){
@@ -86,7 +92,8 @@ void *thread2(void *inpar ){
          loop_cntr2++;
          loop_cntr = 0;
 
-         msg_buf[0] = loop_cntr2;
+         msg_buf[VALUE] = loop_cntr2;
+         msg_buf[COMMAND] = *p_running ? COMMAND_NOP : COMMAND_EXIT;
          printf("%s sending....\n", __FUNCTION__);
          rc = mq_send(q, msg_buf, MYMSGSIZE, 5);
          if (rc==(mqd_t)-1){
@@ -100,6 +107,10 @@ void *thread2(void *inpar ){
             assert_ext("Queue writing failure" == NULL);
          }
          printf("sent!\n");
+         if (msg_buf[COMMAND] == COMMAND_EXIT) {
+            printf("Exiting thread2!\n");
+            break;
+         }
       }
    }
    return (void*)1;
@@ -137,7 +148,11 @@ void *thread3(void *inpar){
 
          assert_ext("Queue reading failure\n" == NULL);
       }
-      printf("Received: %d of length %d\n",msg_buf[0],rc);
+      printf("Received: %d of length %d\n",msg_buf[VALUE],rc);
+      if (msg_buf[COMMAND] == COMMAND_EXIT) {
+         printf("Exiting thread3!\n");
+         break;
+      }
    }
    return (void*)1;
 }
@@ -147,6 +162,7 @@ int main(char argc, char **argv)
    pthread_t T2_Thid,T3_Thid;
    mqd_t q2;
    int loop =0;
+   int running = 1;
    struct mq_attr qattr;
 
    printf("Root-thread starting..\n");
@@ -170,7 +186,7 @@ int main(char argc, char **argv)
 
    printf("Queues created\n");
    printf("Creating thread2\n");
-   assert_ext (pthread_create(&T2_Thid, NULL, thread2, 0) == 0);
+   assert_ext (pthread_create(&T2_Thid, NULL, thread2, &running) == 0);
    printf("thread2 started\n");
 
    printf("Creating thread3\n");
@@ -196,11 +212,14 @@ int main(char argc, char **argv)
    sleep(5);
 
 
-   printf("Killing thread 3\n");
-   assert_ext (pthread_cancel(T3_Thid) == 0);
+   printf("Stopping threads\n");
+   running = 0;
 
-   printf("Killing thread 2\n");
-   assert_ext (pthread_cancel(T2_Thid) == 0);
+   printf("Waiting for thread 2 completion\n");
+   assert_ext (pthread_join(T2_Thid, NULL) == 0);
+
+   printf("Waiting for thread 3 completion\n");
+   assert_ext (pthread_join(T3_Thid, NULL) == 0);
    return 0;
 }
 

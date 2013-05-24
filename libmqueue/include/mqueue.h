@@ -59,7 +59,11 @@ if !defined (HAS_DIRCWRAP_H)
 
 */
 
+#ifndef HAVE_ANDROID_OS
+/* Android defines mqd_t in "sys/types.h" */
 typedef unsigned int mqd_t;
+#endif
+
 struct mq_attr{
    size_t mq_msgsize;
    size_t mq_maxmsg;
