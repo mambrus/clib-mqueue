@@ -21,45 +21,11 @@
 #ifndef _MQUEUE_H
 #define _MQUEUE_H
 
-/*
-if !defined (HAS_DIRCWRAP_H)
-# if defined(_WIN32) &&  defined(_MSC_VER)
-   #define CHAINPATH C:\Program Files\Microsoft Visual Studio\VC98\Include
+#if !defined(HAVE_ANDROID_OS)
+#include <stdint.h>
+typedef uintptr_t mqd_t;
+#endif
 
-# elif defined(__BORLANDC__) || defined(__BCPLUSPLUS__)
-   #define CHAINPATH C:/BC5/INCLUDE
-
-# elif defined( __C166__ )
-   #define CHAINPATH C:\Keil\C166\INC
-
-# elif defined(__GNUC__)
-   #ifndef CHAINPATH
-      #define CHAINPATH /usr/include
-   #endif
-
-# else
-   #error "Can\'t determine the target you're building for"
-# endif
-
-# define DEFSTR( x ) \
-   #x
-
-# define FNAME( path, file ) \
-   DEFSTR( path/file )
-
-# define BUILDCHAIN( file ) \
-   FNAME( CHAINPATH, file )
-
-#else
-# include <dircwrap.h>
-#endif // if !defined (HAS_DIRCWRAP_H)
-
-#include BUILDCHAIN(mqueue.h)
-
-
-*/
-
-typedef unsigned int mqd_t;
 struct mq_attr{
    size_t mq_msgsize;
    size_t mq_maxmsg;
