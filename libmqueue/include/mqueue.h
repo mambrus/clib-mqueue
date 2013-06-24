@@ -26,14 +26,16 @@
 typedef uintptr_t mqd_t;
 #endif
 
-struct mq_attr{
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+struct X_mq_attr{
    size_t mq_msgsize;
    size_t mq_maxmsg;
 };
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
+#define mq_attr     X_mq_attr
 
 int X_mq_close(
    mqd_t                 mq

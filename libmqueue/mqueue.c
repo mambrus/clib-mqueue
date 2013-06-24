@@ -106,7 +106,6 @@ typedef struct {	  /*File descriptor */
 	pthread_t				tId;	 /* Belongs to task */
 	mode_t					oflags; /* Open for mode	*/
 	int						qId;	 /* Attached queue  */
-
 }FileD;
 
 /*****************************************************************************
@@ -259,13 +258,13 @@ mqd_t mq_open(
 
 			/*Todo: doesn't work.. why? */
 			/*memcpy( &queuePool[qId].mq_attr, mq_attr, sizeof(struct mq_attr));*/
-		 /*strange...*/
+			/*strange...*/
 			queuePool[qId].mq_attr.mq_maxmsg = mq_attr->mq_maxmsg;
 			queuePool[qId].mq_attr.mq_msgsize = mq_attr->mq_msgsize;
 
 			/* Create the message array */
 			queuePool[qId].mBox.messArray =
-			(MessT*)malloc((mq_attr->mq_maxmsg) * sizeof(MessT));
+			(MessT*)calloc(mq_attr->mq_maxmsg, sizeof(MessT));
 			/* Create every message buffer and put it in array */
 			if (queuePool[qId].mBox.messArray == NULL) {
 				/*No more memory left on heap */
@@ -276,7 +275,7 @@ mqd_t mq_open(
 
 			for (k=0; k<mq_attr->mq_maxmsg; k++){
 				queuePool[qId].mBox.messArray[k].buffer =
-				(char*)malloc(mq_attr->mq_msgsize * sizeof(char));
+				(char*)calloc(1,mq_attr->mq_msgsize);
 				if (queuePool[qId].mBox.messArray[k].buffer == NULL){
 
 					/*No more memory left on heap */
@@ -378,14 +377,13 @@ size_t mq_receive(
 		return(-1);
 	}
 
-	if (!( O_ISRDONLY(filePool[mq].oflags) || 
-		  O_ISRDWR(filePool[mq].oflags))) 
+	if (!( O_ISRDONLY(filePool[mq].oflags) ||
+		  O_ISRDWR(filePool[mq].oflags)))
 	{
 		assert_ext(sem_post(&poolAccessSem) == 0);
 		errno =  EBADF;
 		return(-1);
 	}
-
 
 	Q = &queuePool[filePool[mq].qId];
 
@@ -413,22 +411,30 @@ size_t mq_receive(
 	/* OK so far */
 	/* Release pool-access */
 	assert_ext(sem_post(&poolAccessSem) == 0);
-	/* Will block if necessary */
+
+	/* Will block here if necessary waiting for messages, i.e.
+	 * not just short disruptions protecting integrity */
 	assert_ext(sem_wait(&Q->sem) == 0);
+
+	assert_ext(sem_wait(&poolAccessSem) == 0);
 
 	memcpy(
 		msg_buffer,
 		Q->mBox.messArray[Q->mBox.mIdxOut].buffer,
 		Q->mBox.messArray[Q->mBox.mIdxOut].msgSz
-	); if (msgprio)  /* Special case if attribute is NULL. Check what standard
-						says about that */
+	);
 
-	*msgprio = Q->mBox.messArray[Q->mBox.mIdxIn].order.prio;
+	/* Special case if attribute is NULL. Check what standard says about
+	 * that */
+	if (msgprio) {
+		*msgprio = Q->mBox.messArray[Q->mBox.mIdxIn].order.prio;
+	}
 
 	msgSize = Q->mBox.messArray[Q->mBox.mIdxOut].msgSz;
 
 	Q->mBox.mIdxOut++;
 	Q->mBox.mIdxOut %= Q->mq_attr.mq_maxmsg;
+	assert_ext(sem_post(&poolAccessSem) == 0);
 
 	return(msgSize);
 }
@@ -438,9 +444,9 @@ size_t mq_receive(
 @see http://www.opengroup.org/onlinepubs/009695399/functions/mq_setattr.html
 */
 int mq_setattr(
-	mqd_t				 mqdes,
-	const struct mq_attr *new_attrs,
-	struct mq_attr		*old_attrs
+	mqd_t					mqdes,
+	const struct mq_attr	*new_attrs,
+	struct mq_attr			*old_attrs
 ){
 	pthread_once(&mq_once, initialize);
 	_MQ_NO_WARN_VAR(mqdes);
@@ -458,8 +464,8 @@ int mq_setattr(
 @see http://www.opengroup.org/onlinepubs/009695399/functions/mq_send.html
 */
 int mq_send(
-	mqd_t				 mq,
-	const char		 	*msg,
+	mqd_t				mq,
+	const char			*msg,
 	size_t				msglen,
 	unsigned int		msgprio
 ){
@@ -481,8 +487,8 @@ int mq_send(
 		return(-1);
 	}
 
-	if (!( O_ISWRONLY(filePool[mq].oflags) || 
-		  O_ISRDWR(filePool[mq].oflags))) 
+	if (!( O_ISWRONLY(filePool[mq].oflags) ||
+		  O_ISRDWR(filePool[mq].oflags)))
 	{
 		assert_ext(sem_post(&poolAccessSem) == 0);
 		errno =  EBADF;
@@ -582,7 +588,7 @@ static void initialize( void ) {
  *
  *
  * DESCRIPTION: Compare function for quick sort. Sorts by prio, timestamp,
- *				  incom order.
+ *              incoming order.
  *
  *
  * NOTES:
@@ -628,7 +634,7 @@ static void sortByPrio( QueueD *Q ){
 	} else {
 		MessT *tempT;
 
-		tempT = (MessT*)malloc( szMess * sizeof(MessT));
+		tempT = (MessT*)calloc(szMess, sizeof(MessT));
 		/* Copy the content from queue into temp storage */
 		i = Q->mBox.mIdxOut;
 		/*i --;
