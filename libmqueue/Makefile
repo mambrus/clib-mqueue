@@ -32,7 +32,7 @@ LOCAL_LDLIBS:= $(addprefix -L, ${LOCAL_LDLIBS})
 LOCAL_LIBS:= ${LOCAL_LDLIBS} $(addprefix -l, ${LOCAL_LIBS})
 LOCAL_AR_LIBS:= $(addprefix ${LOCAL_LDLIBS}/lib, ${LOCAL_AR_LIBS})
 LOCAL_AR_LIBS:= $(addsuffix .a, ${LOCAL_AR_LIBS})
-CFLAGS += -O0 -g3 ${LOCAL_CFLAGS}
+CFLAGS += -O0 -g3 ${LOCAL_CFLAGS} ${BUILD_CFLAGS}
 CFLAGS += -I ./include -I ../ ${LOCAL_C_INCLUDES}
 CLEAN_MODS := $(patsubst %, $(MAKE) clean -C %;,$(LOCAL_SUBMODULES))
 UNINST_MODS := $(patsubst %, $(MAKE) uninstall -C %;,$(LOCAL_SUBMODULES))
@@ -54,8 +54,8 @@ else
 endif
 
 LOCAL_MODULE := lib/${LOCAL_MODULE}
+all: build
 build: tags $(LOCAL_MODULE)
-all: install
 
 ${LOCAL_SUBMODULES}:
 	$(MAKE) -e -k -C $@ install
@@ -66,10 +66,9 @@ clean:
 	rm -f lib/*.so lib/*.a
 	rm -f *.tmp
 	rm -f *.d
-	rm -f $(LOCAL_MODULE)
 	rm -f tags
 
-install: ${INSTALLDIR}/${LOCAL_MODULE} ${INSTALLDIR}/${EXHEADERS}
+install: all ${INSTALLDIR}/${LOCAL_MODULE} ${INSTALLDIR}/${EXHEADERS}
 
 uninstall:
 	$(UNINST_MODS)
