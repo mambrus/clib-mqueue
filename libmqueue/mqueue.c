@@ -49,10 +49,16 @@
 /*****************************************************************************
  * local definitions
  *****************************************************************************/
-#define NUMBER_OF_QUEUES		100
-#define NUMBER_OF_MESSAGES		100
-#define NUMBER_OF_FILES			100
-#define CREATE_ONLY				(NUMBER_OF_FILES + 1)
+#ifndef MQ_NUMBER_OF_QUEUES
+	#define MQ_NUMBER_OF_QUEUES		100
+#endif
+#ifndef MQ_NUMBER_OF_MESSAGES
+	#define MQ_NUMBER_OF_MESSAGES	100
+#endif
+#ifndef MQ_NUMBER_OF_FILES
+	#define MQ_NUMBER_OF_FILES		100
+#endif
+#define CREATE_ONLY				(MQ_NUMBER_OF_FILES + 1)
 
 /* Calculates number of messages in queue */
 #define NUMB_MESS(Q) ((Q->mBox.mIdxIn>=Q->mBox.mIdxOut)? \
@@ -111,10 +117,10 @@ typedef struct {	  /*File descriptor */
 /*****************************************************************************
  * private data
  *****************************************************************************/
-static QueueD	queuePool[ NUMBER_OF_QUEUES ];
+static QueueD	queuePool[ MQ_NUMBER_OF_QUEUES ];
 static int		qPIdx = 0; /* Todo: Make this round-trip */
 
-static FileD	filePool[ NUMBER_OF_FILES ];
+static FileD	filePool[ MQ_NUMBER_OF_FILES ];
 static int		fPIdx = 0; /* Todo: Make this round-trip */
 
 static sem_t	poolAccessSem;
@@ -207,12 +213,12 @@ mqd_t mq_open(
 		int reuse = 0;
 
 		/* Seek for new empty slot in queue pool */
-		for (i=qPIdx,j=0; j<NUMBER_OF_QUEUES && queuePool[i].taken != 0; j++) {
+		for (i=qPIdx,j=0; j<MQ_NUMBER_OF_QUEUES && queuePool[i].taken != 0; j++) {
 			i++;
-			i%=NUMBER_OF_QUEUES;
+			i%=MQ_NUMBER_OF_QUEUES;
 		}
 
-		if (j==NUMBER_OF_QUEUES) { /* No empty slot found */
+		if (j==MQ_NUMBER_OF_QUEUES) { /* No empty slot found */
 			errno = EMFILE;
 			assert_ext(sem_post(&poolAccessSem) == 0);
 			return(-1);
@@ -221,7 +227,7 @@ mqd_t mq_open(
 		queuePool[i].taken = 1;
 
 		/* Scan the pool to see if duplicate name exists */
-		for (i=0; i<NUMBER_OF_QUEUES; i++) {
+		for (i=0; i<MQ_NUMBER_OF_QUEUES; i++) {
 			if (queuePool[i].taken){
 				if (strncmp( queuePool[i].mq_name, mq_name, PATH_MAX) == 0){
 					/* Duplicate name exists */
@@ -309,12 +315,12 @@ mqd_t mq_open(
 	/* Attach queue handle to file handle if flags indicate also usage */
 	if ( O_ISRDONLY(oflags) || O_ISWRONLY(oflags) || O_ISRDWR(oflags) ) {
 		if (!(oflags & O_CREAT)) { /* Hasn't been created this time. Find it! */
-			for (i=0; i<NUMBER_OF_QUEUES; i++) {
+			for (i=0; i<MQ_NUMBER_OF_QUEUES; i++) {
 				if (queuePool[i].taken)
 					if (strncmp( queuePool[i].mq_name, mq_name, PATH_MAX) == 0)
 						break;
 			}
-			if ( i == NUMBER_OF_QUEUES ) {/* Not found ... */
+			if ( i == MQ_NUMBER_OF_QUEUES ) {/* Not found ... */
 				assert_ext(sem_post(&poolAccessSem) == 0);
 				errno =  ENOENT;
 				return(-1);
@@ -325,12 +331,12 @@ mqd_t mq_open(
 
 		/* Attach the pool handle to the file descriptor */
 		/* Seek for new empty slot in file pool */
-		for (i=fPIdx,j=0; j<NUMBER_OF_FILES && filePool[i].taken != 0; j++) {
+		for (i=fPIdx,j=0; j<MQ_NUMBER_OF_FILES && filePool[i].taken != 0; j++) {
 			i++;
-			i%=NUMBER_OF_FILES;
+			i%=MQ_NUMBER_OF_FILES;
 		}
 
-		if (j==NUMBER_OF_FILES) { /* No empty slot found */
+		if (j==MQ_NUMBER_OF_FILES) { /* No empty slot found */
 			errno = EMFILE;
 			assert_ext(sem_post(&poolAccessSem) == 0);
 			return(-1);
@@ -368,7 +374,7 @@ size_t mq_receive(
 	/*Is valid file-handle?*/
 
 	if (!(
-		((mq>=0) && (mq<NUMBER_OF_FILES)) &&
+		((mq>=0) && (mq<MQ_NUMBER_OF_FILES)) &&
 		( filePool[mq].taken == 1 ) &&
 		( filePool[mq].tId == pthread_self())
 	)){
@@ -478,7 +484,7 @@ int mq_send(
 	/*Is valid file-handle?*/
 
 	if (!(
-		((mq>=0) && (mq<NUMBER_OF_FILES)) &&
+		((mq>=0) && (mq<MQ_NUMBER_OF_FILES)) &&
 		( filePool[mq].taken == 1 ) &&
 		( filePool[mq].tId == pthread_self())
 	)){
@@ -570,14 +576,14 @@ static void initialize( void ) {
 	/* Make atomic */
 
 	assert_ext(sem_wait(&poolAccessSem) == 0);
-	for (i=0; i<NUMBER_OF_QUEUES; i++) {
+	for (i=0; i<MQ_NUMBER_OF_QUEUES; i++) {
 		queuePool[i].taken = 0;
 			memset(queuePool[i].mq_name,'Q',PATH_MAX); /* Makes a mark in memory.
 														 Easy to find the pool*/
 			queuePool[i].mq_name[0]=0; /* Also invalidate it for any string
 										 compartments just in case */
 	}
-	for (i=0; i<NUMBER_OF_FILES; i++) {
+	for (i=0; i<MQ_NUMBER_OF_FILES; i++) {
 		filePool[i].taken = 0;
 	}
 	assert_ext(sem_post(&poolAccessSem) == 0);
