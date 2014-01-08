@@ -157,7 +157,7 @@ void *thread3(void *inpar){
    return (void*)1;
 }
 
-int main(char argc, char **argv)
+int main(int argc, char **argv)
 {
    pthread_t T2_Thid,T3_Thid;
    mqd_t q2;
