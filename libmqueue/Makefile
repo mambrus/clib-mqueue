@@ -1,4 +1,5 @@
 PHONIES=install build all clean uninstall
+.DEFAULT_GOAL=all
 
 ifneq (${MAKELEVEL},0)
 
@@ -36,7 +37,7 @@ CFLAGS += -O0 -g3 ${LOCAL_CFLAGS} ${BUILD_CFLAGS}
 CFLAGS += -I ./include -I ../ ${LOCAL_C_INCLUDES}
 CLEAN_MODS := $(patsubst %, $(MAKE) clean -C %;,$(LOCAL_SUBMODULES))
 UNINST_MODS := $(patsubst %, $(MAKE) uninstall -C %;,$(LOCAL_SUBMODULES))
-FOUND_CDEPS:= $(shell ls "*.d" 2>/dev/null)
+FOUND_CDEPS:= $(shell ls *.d 2>/dev/null)
 RINFO := echo
 .INTERMEDIATE: ${LOCAL_SRC_FILES:.c=.d}
 
