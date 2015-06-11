@@ -1,21 +1,32 @@
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := mqueuetest
+LOCAL_MODULE := libmqueue
 LOCAL_MODULE_TAGS := optional
 LOCAL_PRELINK_MODULE := false
 LOCAL_ARM_MODE := arm
+
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/include $(LOCAL_PATH)/..
+
 LOCAL_CFLAGS += -fPIC
-LOCAL_CFLAGS += -DNDEBUG
+LOCAL_CFLAGS += -g3 -O0
 
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/libmqueue/include
+#Enable when code finalized
+#LOCAL_CFLAGS += -DNDEBUG
 
-LOCAL_SRC_FILES:= \
-   assert_np.c \
-   test-posix.c
+#Enable only to check if a new target supports CTORS/DTORS
+#mechanism (typically only once)
+#LOCAL_CFLAGS += -DINITFINI_SHOW
 
-LOCAL_SHARED_LIBRARIES := libmqueue
+LOCAL_SRC_FILES := \
+   mqueue.c
 
-include $(LOCAL_PATH)/common.mk
-include $(BUILD_EXECUTABLE)
-$(call import-module,libmqueue)
+LOCAL_SHARED_LIBRARIES :=
+
+LOCAL_LDLIBS += -lm
+
+ifdef LIB_DYNAMIC
+include $(BUILD_SHARED_LIBRARY)
+else
+include $(BUILD_STATIC_LIBRARY)
+endif

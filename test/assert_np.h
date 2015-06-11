@@ -79,7 +79,7 @@ accepts returning with code, and that the code means error*/
 		if (!rc) {                                               \
 			fprintf(ASSERT_ERROR_FILE,"assert_ret: %s (%s:%d). " \
 				"errno: %d (%s)\n",                              \
-			 	#p, __FILE__, __LINE__, errno, strerror(errno)); \
+				#p, __FILE__, __LINE__, errno, strerror(errno)); \
 			fflush(ASSERT_ERROR_FILE);                           \
 			return EINVAL;                                       \
 		}                                                        \
@@ -87,4 +87,3 @@ accepts returning with code, and that the code means error*/
 )
 #endif
 #endif /* assert_np_h */
-
