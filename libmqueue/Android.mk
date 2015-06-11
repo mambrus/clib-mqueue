@@ -8,7 +8,7 @@ LOCAL_ARM_MODE := arm
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/include $(LOCAL_PATH)/..
 
-LOCAL_CFLAGS += -fPIC -DHAVE_ANDROID_OS
+LOCAL_CFLAGS += -fPIC
 LOCAL_CFLAGS += -g3 -O0
 
 #Enable when code finalized

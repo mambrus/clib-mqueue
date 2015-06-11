@@ -21,7 +21,7 @@
 #ifndef _MQUEUE_H
 #define _MQUEUE_H
 
-#if !defined(HAVE_ANDROID_OS)
+#if !defined(__ANDROID__)
 #include <stdint.h>
 typedef uintptr_t mqd_t;
 #endif
