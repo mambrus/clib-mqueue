@@ -1,11 +1,18 @@
-Chapter 0.0: LIBMQUEUE
-======================
+LIBMQUEUE
+=========
 
 POSIX 1003.1b rt-mqueue for systems that don't have it but implement
 1003.1b semaphores.
 
-Chapter 1.0: PURPOSE & DEFINITION
-=================================
+
+DEPENDENCIES
+============
+* POSIX 1003.1b semaphores
+* [liblog](https://github.com/mambrus/liblog) or equivalent
+
+
+PURPOSE & DEFINITION
+====================
 
 Note that all files at this level should be considered as test for the real
 project, which is in the subdirectory libmqueue. I.e. when deployed, either
@@ -23,8 +30,8 @@ most minimalistic ones) and semaphores. I.e. it can be used almost
 anywhere as either a drop-in replacement or as en extension.
 
 
-Chapter 1.1: HISTORY
-====================
+HISTORY
+=======
 
 Early age
 ---------

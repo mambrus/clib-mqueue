@@ -29,7 +29,7 @@ http://physics.usask.ca/~angie/ep414/labmanual/pdf/posix_users.pdf
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "assert_np.h"
+#include <assure.h>
 #include <pthread.h>
 #include <mqueue.h>
 #include <errno.h>

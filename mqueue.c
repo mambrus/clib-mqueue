@@ -21,7 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <assert_np.h>
+#include <assure.h>
 #include <pthread.h>
 #include <mqueue.h>
 #include <semaphore.h>
