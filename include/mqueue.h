@@ -1,6 +1,6 @@
 /***************************************************************************
  *   Copyright (C) 2013 by Michael Ambrus                                  *
- *   ambrmi09@gmail.com                                             *
+ *   ambrmi09@gmail.com                                                    *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -21,10 +21,8 @@
 #ifndef _MQUEUE_H
 #define _MQUEUE_H
 
-#if !defined(__ANDROID__)
 #include <stdint.h>
 typedef uintptr_t mqd_t;
-#endif
 
 #if defined(__cplusplus)
 extern "C" {
