@@ -476,7 +476,6 @@ int mq_send(
 	unsigned int		msgprio
 ){
 	QueueD	*Q;
-	time_t	ttime;
 
 	pthread_once(&mq_once, initialize);
 	assert_ext(sem_wait(&poolAccessSem) == 0);
